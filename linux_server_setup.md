@@ -29,7 +29,7 @@
 
 **Kullanıcı:**
 - Kullanıcı adı: `dila` (root dışında normal kullanıcı)
-- SSH erişimi: Anahtar tabanlı kimlik doğrulama
+- SSH erişimi: Ssh key ile kimlik doğrulama
 
 ## 2. VirtualBox ve Ağ Ayarları
 
@@ -62,10 +62,10 @@ VM'i sağ tıklayın → **Settings**:
 1. **System** → **Processor**: 1 CPU
 2. **Storage** → Controller: Ubuntu ISO'yu seçin
 3. **Network** → Adapter 1:
-   - **Attached to**: Bridged Adapter (internet erişiminde hata almamak ve VM'ler yerel ağda gerçek bir cihaz rolünde olamaları için)
+   - **Attached to**: Bridged Adapter (internet erişiminde hata almamak ve VM'ler yerel ağda gerçek bir cihaz rolünde olmaları için)
    - **Name**: Host'unuzun aktif ağ adaptörü
 
-### 2.2 Minimal Kurulum
+### 2.2 Server Kurulumları
 
 **Ubuntu Server Kurulum Adımları:**
 1. VM'i başlatın
@@ -81,11 +81,9 @@ VM'i sağ tıklayın → **Settings**:
 
 ## 3. Netplan ile Statik IP Ataması
 
-### 3.1 Netplan Nedir ve Neden Kullanıyoruz?
+Ubuntuda ağ yapılandırması için **Netplan** kullanılıyor. Netplan yapılandırma dosyasını düzenleyerek static ip tanımlandı.
 
-Ağ yapılandırması için **Netplan** kullanılıyor. 
-
-### 3.2 Mevcut Ağ Yapılandırmasını Kontrol Etme
+### 3.1 Mevcut Ağ Yapılandırmasını Kontrol Etme
 
 Her iki VM'de de:
 
@@ -94,7 +92,7 @@ Her iki VM'de de:
 ip a
 ```
 
-### 3.3 Web Sunucusu için Statik IP (192.168.1.50)
+### 3.2 Web Sunucusu için Statik IP (192.168.1.50)
 
 **Adım 1: SSH ile Web VM'ine bağlan**
 
@@ -128,13 +126,14 @@ network:
           - 8.8.8.8
           - 1.1.1.1
 ```
-
-**Neden `gateway4` yerine `routes` kullanıyoruz?**
+**Bilgilendirme**
+ 
+ Neden `gateway4` yerine `routes` kullanıyoruz?
 - `gateway4` deprecated (artık kullanılmıyor)
 - Ubuntu 24.04'te `routes` ile `to: default` kullanımı öneriliyor
 - Bu sayede deprecation uyarısı almıyoruz
 
-**Adım 4: Yapılandırmayı test et ve uygula**
+**Adım 4: Yapılandırmayı uygula ve kontrol et**
 
 ```bash
 # kalıcı olarak uygula
@@ -151,7 +150,7 @@ ip a
 ping -c 4 8.8.8.8
 ```
 
-### 3.4 Veritabanı Sunucusu için Statik IP (192.168.1.51)
+### 3.3 Veritabanı Sunucusu için Statik IP (192.168.1.51)
 
 **Aynı işlemleri DB VM'i için tekrarla, sadece IP adresini değiştir:**
 
@@ -195,8 +194,7 @@ ping -c 4 8.8.8.8
 ## 4. OpenSSH Server Kurulumu
 
 ### 4.1 OpenSSH Server Kurulumu
-
-Ubuntu Server kurulumunda SSH'ı işaretlediyseniz zaten kurulu. 
+Ubuntu Server kurulumunda SSH'ı işaretlediyseniz zaten kurulu olması lazım. 
 
 **Her iki VM'de de:**
 
@@ -222,19 +220,19 @@ sudo systemctl status ssh
 ```
 ---
 
-## 5. SSH Anahtar Oluşturma ve Yapılandırma
-### 5.1 Host'ta (Windows) SSH Anahtar Çifti Oluşturma
+## 5. SSH Key Oluşturma ve Yapılandırma
+### 5.1 Host'ta (Windows) SSH key Oluşturma
 
 **Windows PowerShell'de:**
 
 ```powershell
-# SSH anahtar çifti oluştur
+# SSH key oluştur
 ssh-keygen
 ```
 
 **Oluşturulan dosyalar:**
-- `C:\Users\YourName\.ssh\id_rsa` → Private key (GİZLİ)
-- `C:\Users\YourName\.ssh\id_rsa.pub` → Public key (paylaşılabilir)
+- `C:\Users\YourName\.ssh\id_rsa` → Private key 
+- `C:\Users\YourName\.ssh\id_rsa.pub` → Public key 
 
 **Public key:**
 
@@ -419,7 +417,7 @@ sudo ufw default allow outgoing
 ```bash
 sudo ufw limit 22/tcp
 
-# MySQL/MariaDB portunu SADECE web sunucusundan izin ver
+# MySQL/MariaDB portunu sadece web sunucusundan izin ver
 sudo ufw allow from 192.168.1.50 to any port 3306 proto tcp
 ```
 
@@ -586,8 +584,8 @@ sudo apt upgrade -y
 ```bash
 # Apache, PHP ve WordPress için gerekli PHP eklentiler ile
 sudo apt install -y apache2 php8.3 libapache2-mod-php8.3 \
-  php8.3-mysql php8.3-curl php8.3-gd php8.3-mbstring \
-  php8.3-xml php8.3-xmlrpc php8.3-zip php8.3-intl
+  php8.3-mysql php8.3-curl php8.3-mbstring \
+  php8.3-xml  php8.3-zip php8.3-intl
 ```
 
 **Adım 3: Servisleri başlat ve etkinleştir**
@@ -651,7 +649,6 @@ sudo chmod -R 755 /var/www/2025ozgur
 ### 9.1 Site İçeriği Oluşturma
 
 **Web VM'de:**
-
 ```bash
 cat << 'EOF' | sudo tee /var/www/2025ozgur/index.html > /dev/null
 <!DOCTYPE html>
@@ -689,7 +686,7 @@ done
 echo "</body></html>" | sudo tee -a /var/www/2025ozgur/index.html > /dev/null
 ```
 
-### 9.1 Yönetim Sayfası için Parola Koruması
+### 9.2 Yönetim Sayfası için Parola Koruması
 
 **Adım 1: htpasswd aracını kur**
 
@@ -717,7 +714,7 @@ sudo mkdir -p /var/www/2025ozgur/yonetim
 sudo chown -R www-data:www-data /var/www/2025ozgur/yonetim
 ```
 
-### 9.2 Apache Virtual Host Yapılandırması
+### 9.3 Apache Virtual Host Yapılandırması
 
 ```bash
 # Virtual Host dosyası oluştur
@@ -758,8 +755,7 @@ sudo a2ensite 2025ozgur.com.conf
 sudo systemctl reload apache2
 ```
 
-### 9.3 Hosts Dosyasına Ekleme 
-
+### 9.4 Hosts Dosyasına Ekleme 
 **Windows'ta `C:\Windows\System32\drivers\etc\hosts` dosyasını düzenle:**
 
 PowerShell'i **yönetici olarak** çalıştır:
@@ -780,7 +776,7 @@ DNS cache'i temizle:
 ipconfig /flushdns
 ```
 
-### 9.4 Test Etme
+### 9.5 Test Etme
 
 **Ana sayfa:**
 ```
@@ -842,7 +838,6 @@ sudo nano wp-config.php
 ```
 
 **Veritabanı bilgilerini değiştir:**
-
 ```php
 define( 'DB_NAME', 'wordpress_db' );
 define( 'DB_USER', 'wp_user' );
@@ -920,7 +915,7 @@ http://bugday.org adresine git kurulumu tamamla
 WordPress yönetim panelinde:
 
 1. **Ayarlar** → **Kalıcı Bağlantılar**
-2. **Yazı adı** seçeneğini seçin: `/%postname%/`
+2. **Yazı adı** seçeneğini seçin: `/%year%/%monthnum%/%day%/%postname%/`
 3. **Değişiklikleri Kaydet**
 
 
@@ -942,7 +937,7 @@ Yazı yayımlandıktan sonra **"Yazıyı Görüntüle"** linkine tıklayın.
 
 URL şöyle olacak:
 ```
-http://bugday.org/benim-yeni-yazim/
+http://www.bugday.org/2025/10/05/bubenimyazim/
 ```
 
 Bu SEO-uyumlu URL yapısı
